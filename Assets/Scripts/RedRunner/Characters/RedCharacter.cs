@@ -53,6 +53,10 @@ namespace RedRunner.Characters
 		protected Skeleton m_Skeleton;
 		[SerializeField]
 		protected float m_RollForce = 10f;
+		[SerializeField]
+		protected float m_JumpHoldForce = 25f;
+		[SerializeField]
+		protected float m_MaxJumpHoldTime = 0.2f;
 
 		[Header ( "Character Audio" )]
 		[Space]
@@ -70,6 +74,8 @@ namespace RedRunner.Characters
 		protected bool m_ClosingEye = false;
 		protected bool m_Guard = false;
 		protected bool m_Block = false;
+		protected bool m_IsJumpHeld = false;
+		protected float m_JumpHoldTime = 0f;
 		protected Vector2 m_Speed = Vector2.zero;
 		protected float m_CurrentRunSpeed = 0f;
 		protected float m_CurrentSmoothVelocity = 0f;
@@ -303,6 +309,20 @@ namespace RedRunner.Characters
 			{
 				Jump ();
 			}
+			// Variable jump height: apply extra upward force while button is held
+			if ( CrossPlatformInputManager.GetButton ( "Jump" ) && m_IsJumpHeld && !IsDead.Value
+				&& m_JumpHoldTime < m_MaxJumpHoldTime && m_Rigidbody2D.linearVelocity.y > 0f )
+			{
+				m_JumpHoldTime += Time.deltaTime;
+				Vector2 holdVelocity = m_Rigidbody2D.linearVelocity;
+				holdVelocity.y += m_JumpHoldForce * Time.deltaTime;
+				m_Rigidbody2D.linearVelocity = holdVelocity;
+			}
+			if ( CrossPlatformInputManager.GetButtonUp ( "Jump" ) )
+			{
+				m_IsJumpHeld = false;
+				m_JumpHoldTime = 0f;
+			}
 			if ( IsDead.Value && !m_ClosingEye )
 			{
 				StartCoroutine ( CloseEye () );
@@ -455,6 +475,8 @@ namespace RedRunner.Characters
 					Vector2 velocity = m_Rigidbody2D.linearVelocity;
 					velocity.y = m_JumpStrength;
 					m_Rigidbody2D.linearVelocity = velocity;
+					m_IsJumpHeld = true;
+					m_JumpHoldTime = 0f;
 					m_Animator.ResetTrigger ( "Jump" );
 					m_Animator.SetTrigger ( "Jump" );
 					m_JumpParticleSystem.Play ();
@@ -500,6 +522,8 @@ namespace RedRunner.Characters
 			m_ClosingEye = false;
 			m_Guard = false;
 			m_Block = false;
+			m_IsJumpHeld = false;
+			m_JumpHoldTime = 0f;
 			m_CurrentFootstepSoundIndex = 0;
 			transform.localScale = m_InitialScale;
 			m_Rigidbody2D.linearVelocity = Vector2.zero;
