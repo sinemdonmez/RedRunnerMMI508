@@ -21,13 +21,7 @@ namespace RedRunner.UI
 
 		protected override void Start()
 		{
-			var gm = GameManager.Singleton ?? FindFirstObjectByType<GameManager>();
-			if (gm == null)
-			{
-				Debug.LogError("UICoinImage: GameManager not found in scene; coin UI will be disabled.");
-				enabled = false;
-				return;
-			}
+			var gm = GameManager.Singleton;
 
 			gm.m_Coin.AddEventAndFire(Coin_OnCoinCollected, this);
 		}
