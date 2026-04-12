@@ -19,7 +19,9 @@ namespace RedRunner.Characters
 		[SerializeField]
 		protected float m_MaxRunSpeed = 8f;
 		[SerializeField]
-		protected float m_RunSmoothTime = 5f;
+		protected float m_Acceleration = 20f;
+		[SerializeField]
+		protected float m_Deceleration = 30f;
 		[SerializeField]
 		protected float m_RunSpeed = 5f;
 		[SerializeField]
@@ -77,8 +79,6 @@ namespace RedRunner.Characters
 		protected bool m_IsJumpHeld = false;
 		protected float m_JumpHoldTime = 0f;
 		protected Vector2 m_Speed = Vector2.zero;
-		protected float m_CurrentRunSpeed = 0f;
-		protected float m_CurrentSmoothVelocity = 0f;
 		protected int m_CurrentFootstepSoundIndex = 0;
 		protected Vector3 m_InitialScale;
 		protected Vector3 m_InitialPosition;
@@ -99,7 +99,7 @@ namespace RedRunner.Characters
 		{
 			get
 			{
-				return m_RunSmoothTime;
+				return m_Acceleration;
 			}
 		}
 
@@ -296,13 +296,6 @@ namespace RedRunner.Characters
 			// Speed
 			m_Speed = new Vector2 ( Mathf.Abs ( m_Rigidbody2D.linearVelocity.x ), Mathf.Abs ( m_Rigidbody2D.linearVelocity.y ) );
 
-			// Speed Calculations
-			m_CurrentRunSpeed = m_RunSpeed;
-			if ( m_Speed.x >= m_RunSpeed )
-			{
-				m_CurrentRunSpeed = Mathf.SmoothDamp ( m_Speed.x, m_MaxRunSpeed, ref m_CurrentSmoothVelocity, m_RunSmoothTime );
-			}
-
 			// Input Processing
 			Move ( CrossPlatformInputManager.GetAxis ( "Horizontal" ) );
 			if ( CrossPlatformInputManager.GetButtonDown ( "Jump" ) )
@@ -443,24 +436,21 @@ namespace RedRunner.Characters
 		{
 			if ( !IsDead.Value )
 			{
-				float speed = m_CurrentRunSpeed;
-//				if ( CrossPlatformInputManager.GetButton ( "Walk" ) )
-//				{
-//					speed = m_WalkSpeed;
-				//				}
+				float targetSpeed = m_MaxRunSpeed * horizontalAxis;
+				float rate = Mathf.Abs ( horizontalAxis ) > 0.01f ? m_Acceleration : m_Deceleration;
 				Vector2 velocity = m_Rigidbody2D.linearVelocity;
-				velocity.x = speed * horizontalAxis;
+				velocity.x = Mathf.MoveTowards ( velocity.x, targetSpeed, rate * Time.deltaTime );
 				m_Rigidbody2D.linearVelocity = velocity;
 				if ( horizontalAxis > 0f )
 				{
 					Vector3 scale = transform.localScale;
-					scale.x = Mathf.Sign ( horizontalAxis );
+					scale.x = 1f;
 					transform.localScale = scale;
 				}
 				else if ( horizontalAxis < 0f )
 				{
 					Vector3 scale = transform.localScale;
-					scale.x = Mathf.Sign ( horizontalAxis );
+					scale.x = -1f;
 					transform.localScale = scale;
 				}
 			}
