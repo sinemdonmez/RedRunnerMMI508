@@ -19,7 +19,7 @@ namespace RedRunner.UI
 
 		void GameManager_OnScoreChanged ( float newScore, float highScore, float lastScore )
 		{
-			text = highScore.ToLength ();
+			text = Mathf.Max ( newScore, highScore ).ToLength ();
 		}
 
 	}
