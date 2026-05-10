@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 
-using BayatGames.SaveGameFree;
-using BayatGames.SaveGameFree.Serializers;
 
 using RedRunner.Characters;
 using RedRunner.Collectables;
@@ -91,42 +89,13 @@ namespace RedRunner
                 Destroy(gameObject);
                 return;
             }
-            SaveGame.Serializer = new SaveGameBinarySerializer();
             m_Singleton = this;
             m_Score = 0f;
 
-            if (SaveGame.Exists("coin"))
-            {
-                m_Coin.Value = SaveGame.Load<int>("coin");
-            }
-            else
-            {
-                m_Coin.Value = 0;
-            }
-            if (SaveGame.Exists("audioEnabled"))
-            {
-                SetAudioEnabled(SaveGame.Load<bool>("audioEnabled"));
-            }
-            else
-            {
-                SetAudioEnabled(true);
-            }
-            if (SaveGame.Exists("lastScore"))
-            {
-                m_LastScore = SaveGame.Load<float>("lastScore");
-            }
-            else
-            {
-                m_LastScore = 0f;
-            }
-            if (SaveGame.Exists("highScore"))
-            {
-                m_HighScore = SaveGame.Load<float>("highScore");
-            }
-            else
-            {
-                m_HighScore = 0f;
-            }
+            m_Coin.Value = PlayerPrefs.GetInt("coin", 0);
+            SetAudioEnabled(PlayerPrefs.GetInt("audioEnabled", 1) == 1);
+            m_LastScore = PlayerPrefs.GetFloat("lastScore", 0f);
+            m_HighScore = PlayerPrefs.GetFloat("highScore", 0f);
 
         }
 
@@ -203,9 +172,10 @@ namespace RedRunner
             {
                 m_HighScore = m_Score;
             }
-            SaveGame.Save<int>("coin", m_Coin.Value);
-            SaveGame.Save<float>("lastScore", m_Score);
-            SaveGame.Save<float>("highScore", m_HighScore);
+            PlayerPrefs.SetInt("coin", m_Coin.Value);
+            PlayerPrefs.SetFloat("lastScore", m_Score);
+            PlayerPrefs.SetFloat("highScore", m_HighScore);
+            PlayerPrefs.Save();
         }
 
         public void ExitGame()
