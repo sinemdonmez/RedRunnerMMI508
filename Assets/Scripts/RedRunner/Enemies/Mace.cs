@@ -85,6 +85,7 @@ namespace RedRunner.Enemies
 
 		public override void Kill (Character target)
 		{
+			RedRunner.Analytics.AnalyticsManager.ReportDeathCause (RedRunner.Analytics.ObstacleType.Mace);
 			m_PathFollower.Stopped = true;
 			target.Die (true);
 			m_Animator.SetTrigger ("Smile");

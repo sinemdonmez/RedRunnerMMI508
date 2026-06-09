@@ -40,6 +40,9 @@ namespace RedRunner
         private string m_ShareText;
         [SerializeField]
         private string m_ShareUrl;
+        [SerializeField]
+        [Tooltip("Time scale applied while the game is running. 1 = normal speed.")]
+        private float m_GameTimeScale = 1.7f;
         private float m_StartScoreX = 0f;
         private float m_HighScore = 0f;
         private float m_LastScore = 0f;
@@ -113,6 +116,7 @@ namespace RedRunner
 
         IEnumerator DeathCrt()
         {
+            Analytics.AnalyticsManager.RunEnd(m_Score);
             m_LastScore = m_Score;
             if (m_Score > m_HighScore)
             {
@@ -201,6 +205,7 @@ namespace RedRunner
         public void StartGame()
         {
             m_GameStarted = true;
+            Analytics.AnalyticsManager.RunStart();
             ResumeGame();
         }
 
@@ -213,7 +218,7 @@ namespace RedRunner
         public void ResumeGame()
         {
             m_GameRunning = true;
-            Time.timeScale = 1f;
+            Time.timeScale = m_GameTimeScale;
         }
 
         public void EndGame()

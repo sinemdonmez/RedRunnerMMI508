@@ -6,6 +6,7 @@ using UnityEngine.Events;
 using UnityStandardAssets.CrossPlatformInput;
 
 using RedRunner.Utilities;
+using RedRunner.Analytics;
 
 namespace RedRunner.Characters
 {
@@ -59,6 +60,8 @@ namespace RedRunner.Characters
 		protected float m_JumpHoldForce = 25f;
 		[SerializeField]
 		protected float m_MaxJumpHoldTime = 0.2f;
+		[SerializeField]
+		protected float m_CoyoteTime = 0.1f;
 
 		[Header ( "Character Audio" )]
 		[Space]
@@ -78,6 +81,7 @@ namespace RedRunner.Characters
 		protected bool m_Block = false;
 		protected bool m_IsJumpHeld = false;
 		protected float m_JumpHoldTime = 0f;
+		protected float m_CoyoteTimeCounter = 0f;
 		protected Vector2 m_Speed = Vector2.zero;
 		protected int m_CurrentFootstepSoundIndex = 0;
 		protected Vector3 m_InitialScale;
@@ -290,11 +294,23 @@ namespace RedRunner.Characters
 
 			if ( transform.position.y < 0f )
 			{
+				AnalyticsManager.ReportDeathCause ( ObstacleType.Fall );
 				Die ();
 			}
 
 			// Speed
 			m_Speed = new Vector2 ( Mathf.Abs ( m_Rigidbody2D.linearVelocity.x ), Mathf.Abs ( m_Rigidbody2D.linearVelocity.y ) );
+			AnalyticsManager.Tick ( m_Speed.x );
+
+			// Coyote time: keep the jump window open for a short moment after leaving the ground
+			if ( m_GroundCheck.IsGrounded )
+			{
+				m_CoyoteTimeCounter = m_CoyoteTime;
+			}
+			else
+			{
+				m_CoyoteTimeCounter -= Time.deltaTime;
+			}
 
 			// Input Processing
 			Move ( CrossPlatformInputManager.GetAxis ( "Horizontal" ) );
@@ -460,11 +476,13 @@ namespace RedRunner.Characters
 		{
 			if ( !IsDead.Value )
 			{
-				if ( m_GroundCheck.IsGrounded )
+				if ( m_CoyoteTimeCounter > 0f )
 				{
+					m_CoyoteTimeCounter = 0f;
 					Vector2 velocity = m_Rigidbody2D.linearVelocity;
 					velocity.y = m_JumpStrength;
 					m_Rigidbody2D.linearVelocity = velocity;
+					AnalyticsManager.ReportJump ();
 					m_IsJumpHeld = true;
 					m_JumpHoldTime = 0f;
 					m_Animator.ResetTrigger ( "Jump" );
@@ -514,6 +532,7 @@ namespace RedRunner.Characters
 			m_Block = false;
 			m_IsJumpHeld = false;
 			m_JumpHoldTime = 0f;
+			m_CoyoteTimeCounter = 0f;
 			m_CurrentFootstepSoundIndex = 0;
 			transform.localScale = m_InitialScale;
 			m_Rigidbody2D.linearVelocity = Vector2.zero;

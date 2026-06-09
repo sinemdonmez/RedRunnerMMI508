@@ -29,6 +29,7 @@ namespace RedRunner.Enemies
 
 		public override void Kill (Character target)
 		{
+			RedRunner.Analytics.AnalyticsManager.ReportDeathCause (RedRunner.Analytics.ObstacleType.Water);
 			target.Die ();
 			Vector3 spawnPosition = target.transform.position;
 			spawnPosition.y += -1f;

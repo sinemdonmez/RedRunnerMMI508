@@ -41,6 +41,7 @@ namespace RedRunner.Enemies
 
 		public override void Kill (Character target)
 		{
+			RedRunner.Analytics.AnalyticsManager.ReportDeathCause (RedRunner.Analytics.ObstacleType.Spike);
 			target.Die (true);
 			m_FixedJoint2D.connectedBody = target.GetComponent<Skeleton> ().Body;
 			AudioManager.Singleton.PlaySpikeSound (transform.position);
